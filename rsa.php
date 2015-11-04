@@ -1,21 +1,30 @@
 <?php
+include_once("RSA/RSA.php");
 
 if (isset($_SERVER['HTTPS']) )
 {
-      echo "SECURE: This page is being accessed through a secure connection.";
+      echo "SECURE: This page is being accessed through a secure connection.\n\n";
 }
 else
 {
-      echo "UNSECURE: This page is being access through an unsecure connection.";
+      echo "UNSECURE: This page is being access through an unsecure connection.\n\n";
 }
 
 // Create the keypair
-$res=openssl_pkey_new();
+/*
+$res = openssl_pkey_new();
+
+if(!$res){
+	echo("\n".openssl_error_string());
+}
+
 
 // Get private key
 openssl_pkey_export($res, $privatekey);
 
+*/
 // Get public key
+/*
 $publickey=openssl_pkey_get_details($res);
 $publickey=$publickey["key"];
 
@@ -32,18 +41,19 @@ echo "Crypt text:$crypttext\n";
 openssl_private_decrypt($crypttext, $decrypted, $privatekey);
 
 echo "Decrypted text:$decrypted\n";
+*/
 
-echo random_prime(8);
+$bytes = 3;
+$message = 16;
 
-function random_prime($bytes){
-  $prime = openssl_random_pseudo_bytes($bytes);
+$keys = RSA::generate_key_pair($bytes);
+$pub_key = $keys["public"];
+$priv_key = $keys["private"];
 
-  if(gmp_prob_prime($prim)){
-    return $prime;
-  }
-  else{
-    return random_prime($bytes);
-  }
-  
-}
+$c = RSA::encrypt($message, $pub_key);
+$m = RSA::decrypt($c, $priv_key);
+
+echo("Plaintext:$message\n");
+echo("Ciphertext:$c\n");
+echo("Decrypted Text:$m\n");
 ?>
