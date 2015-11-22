@@ -1,16 +1,20 @@
 ##############################################################
 ############## M A I N ########################################
 ##############################################################
+
+# Run this script by ./run.sh > log.txt
+
 clear
 
 echo "cleaning output"
 rm output
 
 echo "Compiling "
-gcc -o output primality_nist.c millerRabinNist.c generalNist.c -std=gnu99 -D DEBUG=0 -lcrypto -lm -lgmp -lc
+gcc -o output primality_nist.c millerRabinNist.c generalNist.c -std=gnu99 -D DEBUG=0 -D DIGITAL_SIGNATURE=0 -lcrypto -lm -lgmp -lc
 
 echo "Running ouput"
 #./output <Length of P prime> <Length of Q prime> <Length of the seed for PRG> <Number of Iterations for Rabin-Miller>
+: '
 echo "###############################################################################"
 echo "L=1024bits, N=160bits, SeedLen=1024, Iterations= 500"
 echo "###############################################################################"
@@ -69,4 +73,5 @@ echo "##########################################################################
 echo "##################################################################################"
 echo "L=3072bits, N=256bits, SeedLen=2048, Iterations= 100"
 echo "##################################################################################"
-./output 3072 256 2048 100
+'
+./output 2048 1024 1024 100

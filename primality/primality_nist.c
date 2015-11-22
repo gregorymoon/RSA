@@ -15,6 +15,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include "primalityNist.h"
 #include <math.h>
 #include <openssl/rand.h>
@@ -22,6 +24,8 @@
 #include "millerRabinNist.h"
 #include "generalNist.h"
 #include <sys/time.h>
+#include <linux/input.h>
+#include <sys/syscall.h>
 
 /* ***************** PREPROCESSOR DIRECTIVES **************************/
 #define TESTPRIME		0U
@@ -37,6 +41,24 @@
  	uint16_t ValidL;
  	uint16_t ValidN;
  }primalityNistValid_S;
+
+typedef union
+{
+	struct
+	{
+		uint8_t		Left_btn		:1;
+		uint8_t		Right_btn		:1;
+		uint8_t		Middle_btn		:1;
+		uint8_t		Reserved		:1;
+		uint8_t		X_sign			:1;
+		uint8_t		X_value			:8;
+		uint8_t		Y_value			:8;
+		uint8_t		Y_sign			:1;
+		uint8_t		X_overflow		:1;
+		uint8_t		Y_overflow		:1;
+	};
+	uint8_t	byte[3];
+}MouseData_U;
 
 /****************** ENUM DEFINITIONS *****************************/
 typedef enum
@@ -81,7 +103,33 @@ static primalityNistValid_E primalityNistCheckLN(uint16_t L, uint16_t N)
 }
 
 
+void primalityNist_SeedPRG(uint16_t seedLen)
+{
+	int MouseEventFd;
+	MouseData_U MousePacket;
+	uint8_t Seed[seedLen];
+	if((MouseEventFd = open("/dev/input/mice", O_RDONLY)) < 0)
+	{
+		perror("opening device");
+	}
 
+	while(seedLen && read(MouseEventFd, &MousePacket, 3))
+	{
+		if(MousePacket.X_sign)
+		{
+			MousePacket.X_value = 255U - MousePacket.X_value;
+			if(MousePacket.X_value)
+			{
+				Seed[--seedLen] = MousePacket.X_value;
+				printf("%d", MousePacket.X_value);
+			}
+		}
+#if DEBUG
+		printf("\n Left_BTN = %d, Right_BTN = %d, Middle_BTN = %d, Reseverd = %d, Xsign = %d, X value = %d, Ysign = %d, Y value = %d, X OVFL = %d, Y OVFL = %d", MousePacket.Left_btn, MousePacket.Right_btn, MousePacket.Middle_btn, MousePacket.Reserved, MousePacket.X_sign, MousePacket.X_value, MousePacket.Y_sign, MousePacket.Y_value, MousePacket.X_overflow, MousePacket.Y_overflow);
+#endif
+	}
+	printf("\n Thank you");
+}
 
 
 primalityNistStatus_E primalityNist_Generateprime(uint16_t L, uint16_t N, uint16_t seedLen, unsigned int RM_iter, uint8_t *p, uint8_t *q, uint8_t *seed, uint16_t *counter)
@@ -90,7 +138,12 @@ primalityNistStatus_E primalityNist_Generateprime(uint16_t L, uint16_t N, uint16
 
 	/* Start of Process of generation of prime */
 	// Step 1
+#if DIGITAL_SIGNATURE
 	Validity = primalityNistCheckLN(L, N);
+#else
+	Validity = PRIMALITY_NIST_VALID_LN;
+#endif
+
 	primalityCheckEarlyReturn(Validity);
 
 	//step 2
@@ -103,6 +156,9 @@ primalityNistStatus_E primalityNist_Generateprime(uint16_t L, uint16_t N, uint16
 	//step 4
 	uint16_t b = L - 1 - (n * GENERAL_NIST_OUTPUT_LEN);
 
+	// Seed the Random number generator so that it generates truely random number
+	printf("\nStart moving mouse to create the randomness to seed PRG ");
+	primalityNist_SeedPRG(seedLen);
 	do
 	{
 		// Define the domain_parameter as a single variable
@@ -257,7 +313,7 @@ primalityNistStatus_E primalityNist_Generateprime(uint16_t L, uint16_t N, uint16
 					//Step 11.8
 					// clear all the variables before return All globals + mod2L_1 + pMpz
 					// Send/write back pMpz, qmpz, domainParameterSeedMpz and counterIndex
-#if 1
+#if DEBUG
 					printf("\nPRIME PAIRS FOUND \n\nq = ");
 					mpz_out_str(stdout, 10, qMpz);
 					printf("\n\np = ");
@@ -266,6 +322,9 @@ primalityNistStatus_E primalityNist_Generateprime(uint16_t L, uint16_t N, uint16
 					mpz_out_str(stdout, 10, domainParameterSeedMpz);
 					printf("\n\nCounter = %d\n\n",counterIndex);
 #endif
+					mpz_out_str(stdout, 10, pMpz);
+					printf(",");
+					mpz_out_str(stdout, 10, qMpz);
 					mpz_clear(domainParameterSeedMpz);
 					mpz_clear(mod2N_1);
 					mpz_clear(U);
