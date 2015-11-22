@@ -4,13 +4,23 @@ include_once("PublicKey.php");
 
 abstract class Key{
 	public static function generate_key_pair($num_bytes){
-		$p = Key::get_random_prime($num_bytes);
+//		$p = Key::get_random_prime($num_bytes);
 		
-		do{
-			$q = Key::get_random_prime($num_bytes);
-		}while($p == $q);
-		
+//		do{
+//			$q = Key::get_random_prime($num_bytes);
+//		}while($p == $q);
+		echo("\n Generating random seed for PRG. Keep moving the mouse");
+		$command = "./output 2048 1024 1024 100";
+		exec($command, $output);
+
+		$p = gmp_init($output[0]);
+		$q = gmp_init($output[1]);
+
 		$n = gmp_mul($p, $q);
+		
+		//echo("Value of n\n");
+		//echo(gmp_strval($n));
+		
 		$tn = gmp_mul(gmp_sub($p, 1), gmp_sub($q, 1));
 		
 		//echo("\ntn: $tn");
@@ -27,10 +37,12 @@ abstract class Key{
 		
 		$d = Key::invmod($e, $tn);
 
+
 		return array(
 			"private" => new PrivateKey($p, $q, $d),
 			"public" => new PublicKey($n, $e, $tn)
 		);
+
 	}
 
 	/*

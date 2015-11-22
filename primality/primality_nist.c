@@ -121,14 +121,18 @@ void primalityNist_SeedPRG(uint16_t seedLen)
 			if(MousePacket.X_value)
 			{
 				Seed[--seedLen] = MousePacket.X_value;
+#if DEBUG
 				printf("%d", MousePacket.X_value);
+#endif
 			}
 		}
 #if DEBUG
 		printf("\n Left_BTN = %d, Right_BTN = %d, Middle_BTN = %d, Reseverd = %d, Xsign = %d, X value = %d, Ysign = %d, Y value = %d, X OVFL = %d, Y OVFL = %d", MousePacket.Left_btn, MousePacket.Right_btn, MousePacket.Middle_btn, MousePacket.Reserved, MousePacket.X_sign, MousePacket.X_value, MousePacket.Y_sign, MousePacket.Y_value, MousePacket.X_overflow, MousePacket.Y_overflow);
 #endif
 	}
+#if DEBUG
 	printf("\n Thank you");
+#endif
 }
 
 
@@ -157,7 +161,9 @@ primalityNistStatus_E primalityNist_Generateprime(uint16_t L, uint16_t N, uint16
 	uint16_t b = L - 1 - (n * GENERAL_NIST_OUTPUT_LEN);
 
 	// Seed the Random number generator so that it generates truely random number
+#if DEBUG
 	printf("\nStart moving mouse to create the randomness to seed PRG ");
+#endif
 	primalityNist_SeedPRG(seedLen);
 	do
 	{
@@ -323,7 +329,7 @@ primalityNistStatus_E primalityNist_Generateprime(uint16_t L, uint16_t N, uint16
 					printf("\n\nCounter = %d\n\n",counterIndex);
 #endif
 					mpz_out_str(stdout, 10, pMpz);
-					printf(",");
+					printf("\n");
 					mpz_out_str(stdout, 10, qMpz);
 					mpz_clear(domainParameterSeedMpz);
 					mpz_clear(mod2N_1);
@@ -389,7 +395,9 @@ void main(int argc, char *argv[])
 	secs  = after.tv_sec  - before.tv_sec;
 	usecs = after.tv_usec - before.tv_usec;
 	utime = ((secs) * 1000000 + usecs);
+#if DEBUG
  	printf("\nExecution Time %lu s and %lu us\n\n\n\n", secs, usecs);
+ #endif
 #if TESTPRIME
 	mpz_t test;
 	// Bug: start atleast with a number greater than 1 byte length
