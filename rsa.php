@@ -43,7 +43,7 @@ openssl_private_decrypt($crypttext, $decrypted, $privatekey);
 echo "Decrypted text:$decrypted\n";
 */
 
-$bytes = 3;
+$bytes = 1;
 $message = 16;
 
 $keys = RSA::generate_key_pair($bytes);

@@ -11,18 +11,8 @@ abstract class RSA{
 
 		RSA::check_inputs($c, $priv_key, PrivateKey::class);
 
-		//could cause problem calculating $m1
-		if(gmp_cmp($priv_key->d_p, RSA::$MAX_INT) > 0){
-			echo("\nD_P GREATER THAN MAX INT.");	
-		}
-	
-		//could cause problem calculating $m2
-		if(gmp_cmp($priv_key->d_q, RSA::$MAX_INT) > 0){
-			echo("\nD_Q GREATER THAN MAX INT.");	
-		}
-	
-		$m1 = gmp_mod(gmp_pow($c, gmp_intval($priv_key->d_p)), $priv_key->p);
-		$m2 = gmp_mod(gmp_pow($c, gmp_intval($priv_key->d_q)), $priv_key->q);
+		$m1 = gmp_powm($c, $priv_key->d_p, $priv_key->p);
+		$m2 = gmp_powm($c, $priv_key->d_q, $priv_key->q);
 		$h = gmp_mod(gmp_mul($priv_key->q_inv, gmp_sub($m1, $m2)), $priv_key->p);
 		
 		return gmp_add($m2, gmp_mul($h, $priv_key->q));
