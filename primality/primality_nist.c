@@ -159,12 +159,13 @@ primalityNistStatus_E primalityNist_Generateprime(uint16_t L, uint16_t N, uint16
 
 	//step 4
 	uint16_t b = L - 1 - (n * GENERAL_NIST_OUTPUT_LEN);
-
+#if FEATURE_SEED
 	// Seed the Random number generator so that it generates truely random number
 #if DEBUG
 	printf("\nStart moving mouse to create the randomness to seed PRG ");
 #endif
 	primalityNist_SeedPRG(seedLen);
+#endif
 	do
 	{
 		// Define the domain_parameter as a single variable
