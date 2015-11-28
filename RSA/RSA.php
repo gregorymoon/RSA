@@ -1,5 +1,6 @@
 <?php
 include_once("Key/Key.php");
+include_once("Math/BigInteger.php");
 
 abstract class RSA{
 	private static $MAX_INT;
@@ -25,6 +26,23 @@ abstract class RSA{
 
 	public static function generate_key_pair($num_bytes){
 		return Key::generate_key_pair($num_bytes);
+	}
+	
+	private static function I2OSP($x, $xLen)
+	{
+		$x = gmp_strval($x);
+		$x = $x->toBytes();
+		if (strlen($x) > $xLen) {
+			user_error('Integer too large');
+			return false;
+		}
+		return str_pad($x, $xLen, chr(0), STR_PAD_LEFT);
+	}
+	
+	private static function OS2IP($x)
+	{
+		$temp = new Math_BigInteger($x, 256);
+		return gmp_init($temp->toString());
 	}
 	
 	private static function check_inputs($m, $key, $key_class){
