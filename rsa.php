@@ -50,8 +50,9 @@ $keys = RSA::generate_key_pair($bytes);
 $pub_key = $keys["public"];
 $priv_key = $keys["private"];
 
-$c = RSA::encrypt($message, $pub_key);
-$m = RSA::decrypt($c, $priv_key);
+
+$c = RSA::RSAEP($message, $pub_key);
+$m = RSA::RSADP($c, $priv_key);
 
 echo("Plaintext:$message\n");
 echo("Ciphertext:$c\n");

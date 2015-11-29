@@ -28,9 +28,10 @@ abstract class RSA{
 		return Key::generate_key_pair($num_bytes);
 	}
 	
-	private static function I2OSP($x, $xLen)
+	public static function I2OSP($x, $xLen)
 	{
 		$x = gmp_strval($x);
+		$x = new Math_BigInteger($x);
 		$x = $x->toBytes();
 		if (strlen($x) > $xLen) {
 			user_error('Integer too large');
@@ -39,7 +40,7 @@ abstract class RSA{
 		return str_pad($x, $xLen, chr(0), STR_PAD_LEFT);
 	}
 	
-	private static function OS2IP($x)
+	public static function OS2IP($x)
 	{
 		$temp = new Math_BigInteger($x, 256);
 		return gmp_init($temp->toString());
