@@ -1,5 +1,5 @@
 <?php
-include_once("RSA/RSA.php");
+include_once("RSA/RSAES_OAEP.php");
 
 if (isset($_SERVER['HTTPS']) )
 {
@@ -50,9 +50,12 @@ $keys = RSA::generate_key_pair($bytes);
 $pub_key = $keys["public"];
 $priv_key = $keys["private"];
 
-
+$c = RSAES_OAEP::encrypt($pub_key, $message);
+$m = RSAES_OAEP::decrypt($priv_key, $c);
+/*
 $c = RSA::RSAEP($message, $pub_key);
 $m = RSA::RSADP($c, $priv_key);
+*/
 
 echo("Plaintext:$message\n");
 echo("Ciphertext:$c\n");

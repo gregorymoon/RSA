@@ -3,9 +3,9 @@ include_once("Key/Key.php");
 include_once("Math/BigInteger.php");
 
 abstract class RSA{
-	private static $MAX_INT;
+	protected static $MAX_INT;
 	
-	public static function decrypt($c, $priv_key){
+	protected static function RSADP($c, $priv_key){
 		if(!isset(RSA::$MAX_INT)){
 			RSA::$MAX_INT = gmp_init(strval(PHP_INT_MAX));
 		}
@@ -19,7 +19,7 @@ abstract class RSA{
 		return gmp_add($m2, gmp_mul($h, $priv_key->q));
 	}
 
-	public static function encrypt($m, $pub_key){
+	protected static function RSAEP($m, $pub_key){
 		RSA::check_inputs($m, $pub_key, PublicKey::class);
 		return gmp_mod(gmp_pow($m, gmp_intval($pub_key->e)), $pub_key->n);
 	}
@@ -28,7 +28,7 @@ abstract class RSA{
 		return Key::generate_key_pair($num_bytes);
 	}
 	
-	public static function I2OSP($x, $xLen)
+	protected static function I2OSP($x, $xLen)
 	{
 		$x = gmp_strval($x);
 		$x = new Math_BigInteger($x);
@@ -40,13 +40,13 @@ abstract class RSA{
 		return str_pad($x, $xLen, chr(0), STR_PAD_LEFT);
 	}
 	
-	public static function OS2IP($x)
+	protected static function OS2IP($x)
 	{
 		$temp = new Math_BigInteger($x, 256);
 		return gmp_init($temp->toString());
 	}
 	
-	private static function check_inputs($m, $key, $key_class){
+	protected static function check_inputs($m, $key, $key_class){
 		$err = false;
 		
 		if(is_int($m)){
@@ -68,6 +68,11 @@ abstract class RSA{
 		if($err){
 			exit;
 		}
+	}
+	
+	protected static function get_bytes($num){
+		$temp = new Math_BigInteger(gmp_strval($num));
+		return $temp->toBytes();
 	}
 }
 ?>
