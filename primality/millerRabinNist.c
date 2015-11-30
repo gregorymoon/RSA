@@ -20,8 +20,20 @@
 
 /* ***************** STRUCTURE DEFINITIONS **************************/
 
- /****************** ENUM DEFINITIONS *****************************/
+/****************** ENUM DEFINITIONS *****************************/
 
+/* ***************** PUBLIC FUNCTION DEFINITIONS ********************/
+
+/* *************************************************************************
+ * NAME:             millerRabinNistPrimality
+ * CALLED BY:        primalityNist_Generateprime, main
+ * DESCRIPTION:      Checks whether the given mpz variable is a prime
+ * INPUT PARAMETERS: w : mpz varibale
+ 					 iterations : maximum number of iterations to run
+ * RETURN VALUES:    PRIMALITY_NIST_MR_PROVABLE_PRIME or
+ 					 PRIMALITY_NIST_MR_PROVABLE_COMPOSITE_WITH_FACTOR or
+ 					 PRIMALITY_NIST_MR_PROVABLE_COMPOSITE_NOT_POWER_OF_PRIME
+ ****************************************************************************/
 primalityNistMrStatus_E millerRabinNistPrimality(const mpz_t w, unsigned int iterations)
 {
 	mpz_t m, w_1;
@@ -36,6 +48,7 @@ primalityNistMrStatus_E millerRabinNistPrimality(const mpz_t w, unsigned int ite
 	{
 		a++;
 	}
+	// EXP30-C: Do not depend on the order of evaluation for side effects
 	a--;
 
 	//Step 2 : m = (w–1) / 2^a.
@@ -64,6 +77,8 @@ primalityNistMrStatus_E millerRabinNistPrimality(const mpz_t w, unsigned int ite
 		mpz_t bMpz;
 
 		// String to get the random bits
+		// STR30-C. Do not attempt to modify string literals
+		// STR31-C. Guarantee that storage for strings has sufficient space for character data and the null terminator
 		char bInBinaryString[wlen + 1];
 		do
 		{
@@ -100,6 +115,7 @@ primalityNistMrStatus_E millerRabinNistPrimality(const mpz_t w, unsigned int ite
 			printf("\n");
 #endif
 			// clear all the loop variables
+			// MEM31-C. Free dynamically allocated memory when no longer needed
 			mpz_clear(gcd);
 			mpz_clear(bMpz);
 			mpz_clear(w_1);
@@ -120,6 +136,7 @@ primalityNistMrStatus_E millerRabinNistPrimality(const mpz_t w, unsigned int ite
 #if DEBUG
 			printf("\nMESSAGE :Continuing with next iteration ");
 #endif
+			// MEM31-C. Free dynamically allocated memory when no longer needed
 			mpz_clear(bMpz);
 			mpz_clear(z);
 			mpz_clear(gcd);
@@ -157,6 +174,7 @@ primalityNistMrStatus_E millerRabinNistPrimality(const mpz_t w, unsigned int ite
 
 		if(toStep4_1_5)
 		{
+			// MEM31-C. Free dynamically allocated memory when no longer needed
 			mpz_clear(x);
 			mpz_clear(bMpz);
 			mpz_clear(z);
@@ -193,6 +211,7 @@ primalityNistMrStatus_E millerRabinNistPrimality(const mpz_t w, unsigned int ite
 			mpz_out_str(stdout, 10, gcd);
 			printf("\n");
 #endif
+			// MEM31-C. Free dynamically allocated memory when no longer needed
 			mpz_clear(x_1);
 			mpz_clear(x);
 			mpz_clear(bMpz);
@@ -203,6 +222,7 @@ primalityNistMrStatus_E millerRabinNistPrimality(const mpz_t w, unsigned int ite
 			return PRIMALITY_NIST_MR_PROVABLE_COMPOSITE_WITH_FACTOR;
 		}
 
+		// MEM31-C. Free dynamically allocated memory when no longer needed
 		mpz_clear(x_1);
 		mpz_clear(x);
 		mpz_clear(bMpz);
@@ -214,6 +234,7 @@ primalityNistMrStatus_E millerRabinNistPrimality(const mpz_t w, unsigned int ite
 	}
 
 	//Step 5 :
+	// MEM31-C. Free dynamically allocated memory when no longer needed
 	mpz_clear(m);
 	mpz_clear(w_1);
 	return PRIMALITY_NIST_MR_PROVABLE_PRIME;

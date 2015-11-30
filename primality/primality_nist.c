@@ -72,8 +72,12 @@ typedef enum
 static primalityNistValid_S primalityNistValidLN[] = {{1024,160}, {2048,224}, {2048,256}, {3072,256}};
 
 /* ***************** PRIVATE FUNCTION DECLARATIONS ********************/
+/* DLC31-C : Declare identifiers before using them*/
 static primalityNistValid_E primalityNistCheckLN(uint16_t L, uint16_t N);
+static void primalityNist_SeedPRG(uint16_t seedLen);
+static primalityNistStatus_E primalityNist_Generateprime(uint16_t L, uint16_t N, uint16_t seedLen, unsigned int RM_iter, uint8_t *p, uint8_t *q, uint8_t *seed, uint16_t *counter);
 
+/* ***************** PRIVATE FUNCTION DEFINITIONS ********************/
 
 /* *********************************************************************
  * NAME:             primalityNistCheckLN
@@ -102,12 +106,24 @@ static primalityNistValid_E primalityNistCheckLN(uint16_t L, uint16_t N)
 	return Validity;
 }
 
-
-void primalityNist_SeedPRG(uint16_t seedLen)
+/* *********************************************************************
+ * NAME:             primalityNist_SeedPRG
+ * CALLED BY:        primalityNist_Generateprime
+ * DESCRIPTION:      detects mouse movements, takes the relative x value
+ *				     see the RAND function
+ * INPUT PARAMETERS: seedLen : Length of the seed for the Rand function
+ * RETURN VALUES:    none
+ ***********************************************************************/
+static void primalityNist_SeedPRG(uint16_t seedLen)
 {
-	int MouseEventFd;
+	int MouseEventFd = 0;
 	MouseData_U MousePacket;
 	uint8_t Seed[seedLen];
+
+	/* DL39-C : Avoid information leakage in structure padding*/
+	memset(&MousePacket, 0, sizeof(MousePacket));
+
+	// EXP45-C. Do not perform assignments in selection statements(intentional assignments)
 	if((MouseEventFd = open("/dev/input/mice", O_RDONLY)) < 0)
 	{
 		perror("opening device");
@@ -135,12 +151,27 @@ void primalityNist_SeedPRG(uint16_t seedLen)
 #endif
 }
 
-
+/* ******************************************************************************
+ * NAME:             primalityNist_Generateprime
+ * CALLED BY:        main
+ * DESCRIPTION:      generates the random prime of given lengths of p and q
+ * INPUT PARAMETERS: 	L: Length of p
+ 						N: Length of q
+ 						seedLen : Length of the seed for the Random function
+ 						RM_iter : Maximum number if iterations for M-R method
+ 						p : pointer to (return) p character string
+ 						q : pointer to (return) q character string
+ 						seed : pointer to the (return) seed used
+ 						counter : pointer to the (return) number of iterations 
+ * RETURN VALUES:    primalityNistStatus_E: PRIME_NIST_VALID or PRIME_NIST_INVALID
+ *********************************************************************************/
 primalityNistStatus_E primalityNist_Generateprime(uint16_t L, uint16_t N, uint16_t seedLen, unsigned int RM_iter, uint8_t *p, uint8_t *q, uint8_t *seed, uint16_t *counter)
 {
 	primalityNistValid_E Validity = PRIMALITY_NIST_INVALID_LN;
 
 	/* Start of Process of generation of prime */
+
+	// ARR32-C. Ensure size arguments for variable length arrays are in a valid range
 	// Step 1
 #if DIGITAL_SIGNATURE
 	Validity = primalityNistCheckLN(L, N);
@@ -177,9 +208,11 @@ primalityNistStatus_E primalityNist_Generateprime(uint16_t L, uint16_t N, uint16
 		mpz_t Two;
 		do
 		{
-			//Step 5 : Get an arbitrary sequence of seedlen bits as the domain_parameter_seed.
+			// Step 5 : Get an arbitrary sequence of seedlen bits as the domain_parameter_seed.
 			// Include mouse movements for the seeding the openssl random function. But for now, use the openssl's
 			// random function without seeding
+			// STR30-C. Do not attempt to modify string literals
+			// STR31-C. Guarantee that storage for strings has sufficient space for character data and the null terminator
 			char domainParameterSeedString[seedLen + 1];
 			generalNistGenerateRandomString(seedLen, (char*)&domainParameterSeedString);
 
@@ -269,6 +302,7 @@ primalityNistStatus_E primalityNist_Generateprime(uint16_t L, uint16_t N, uint16
 				// TODO: need to add hash to below function
 				mpz_powm_ui(V, V, (unsigned long int)1U, modTwo_SeedLength);
 				mpz_mul_2exp(V, V, (j*GENERAL_NIST_OUTPUT_LEN));
+				// MEM31-C. Free dynamically allocated memory when no longer needed
 				mpz_add(W, W, V);
 				mpz_clear(V);
 			}
@@ -286,6 +320,7 @@ primalityNistStatus_E primalityNist_Generateprime(uint16_t L, uint16_t N, uint16
 			mpz_powm_ui(V, V, (unsigned long int)1U, modTwoB);
 			mpz_mul_2exp(V, V, (n*GENERAL_NIST_OUTPUT_LEN));
 			mpz_add(W, W, V);
+			// MEM31-C. Free dynamically allocated memory when no longer needed
 			mpz_clear(V);
 			mpz_clear(modTwoB);
 			mpz_clear(modTwo_SeedLength); // not used in subsequent steps so clear it
@@ -296,6 +331,7 @@ primalityNistStatus_E primalityNist_Generateprime(uint16_t L, uint16_t N, uint16
 			mpz_init(mod2L_1);
 			mpz_ui_pow_ui(mod2L_1,(unsigned long int)2U,(unsigned long int)(L-1));
 			mpz_add(X, W, mod2L_1);
+			// MEM31-C. Free dynamically allocated memory when no longer needed
 			mpz_clear(W); // Not used in subsequent steps, so clear
 			
 			//Step 11.4
@@ -303,14 +339,17 @@ primalityNistStatus_E primalityNist_Generateprime(uint16_t L, uint16_t N, uint16
 			mpz_mul_ui(TwoqMpz,qMpz, 2U);
 			mpz_init(c);
 			mpz_powm_ui(c, X, (unsigned long int)1U, TwoqMpz);
+			// MEM31-C. Free dynamically allocated memory when no longer needed
 			mpz_clear(TwoqMpz);
 
 			// Step 11.5
 			mpz_sub_ui(c,c, 1U);
 			mpz_init(pMpz);
 			mpz_sub(pMpz, X, c);
+			// MEM31-C. Free dynamically allocated memory when no longer needed
 			mpz_clear(c);
 			mpz_clear(X); // X is not used in subsequent steps
+
 			// Step 11.6
 			if(0 <= mpz_cmp(pMpz, mod2L_1))
 			{
@@ -332,6 +371,7 @@ primalityNistStatus_E primalityNist_Generateprime(uint16_t L, uint16_t N, uint16
 					mpz_out_str(stdout, 10, pMpz);
 					printf("\n");
 					mpz_out_str(stdout, 10, qMpz);
+					// MEM31-C. Free dynamically allocated memory when no longer needed
 					mpz_clear(domainParameterSeedMpz);
 					mpz_clear(mod2N_1);
 					mpz_clear(U);
@@ -349,11 +389,13 @@ primalityNistStatus_E primalityNist_Generateprime(uint16_t L, uint16_t N, uint16
 			// Step 11.9
 			mpz_add_ui(offset, offset, (unsigned long int)n);
 			mpz_add_ui(offset, offset, 1U);
+			// MEM31-C. Free dynamically allocated memory when no longer needed
 			mpz_clear(mod2L_1);
 			mpz_clear(pMpz);
 		}
 
 		// Clear all the variables from mpz library
+		// MEM31-C. Free dynamically allocated memory when no longer needed
 		mpz_clear(domainParameterSeedMpz);
 		mpz_clear(mod2N_1);
 		mpz_clear(U);
@@ -367,6 +409,17 @@ primalityNistStatus_E primalityNist_Generateprime(uint16_t L, uint16_t N, uint16
 	return PRIME_NIST_INVALID;
 }
 
+/* *********************************************************************
+ * NAME:             main
+ * CALLED BY:        php program of the RSA
+ * DESCRIPTION:      reads argument and call routine to generate the prime
+ * INPUT PARAMETERS:  <Length of P prime> 
+ 					  <Length of Q prime> 
+ 					  <Length of the seed for PRG>
+ 					  <Number of Iterations for Rabin-Miller>
+ * RETURN VALUES:    none, prints the p,q on the console which php program
+ 					 can read
+ ***********************************************************************/
 void main(int argc, char *argv[])
 {
 	uint8_t P[1024], Q[160], Seed[1024];
@@ -388,6 +441,7 @@ void main(int argc, char *argv[])
 	gettimeofday(&before, NULL);
 	// Generate prime number.
 	// Seed length can be very long, but Q qill be reduced to length N
+	// EXP35-C
 	primeNumberStatus = primalityNist_Generateprime(L, N, Seedlen, RM_iterations, (uint8_t *)&P, (uint8_t *)&Q, (uint8_t *)&Seed, &counter);
 
 	/* Take the end time stamp */
@@ -398,10 +452,10 @@ void main(int argc, char *argv[])
 	utime = ((secs) * 1000000 + usecs);
 #if DEBUG
  	printf("\nExecution Time %lu s and %lu us\n\n\n\n", secs, usecs);
- #endif
+#endif
 #if TESTPRIME
 	mpz_t test;
-	// Bug: start atleast with a number greater than 1 byte length
+	// start atleast with a number greater than 1 byte length
 	mpz_init_set_str(test, "257", 10);
 	printf("\n Prime numbers from 257-20000\n");
 	for(unsigned int i = 1; i < 10000; i++)
@@ -413,6 +467,7 @@ void main(int argc, char *argv[])
 			mpz_out_str(stdout, 10, test);
 		}
 	}
+	// MEM31-C. Free dynamically allocated memory when no longer needed
 	mpz_clear(test);
 #endif
 }

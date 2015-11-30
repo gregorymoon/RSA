@@ -48,10 +48,14 @@ void generalNistGenerateRandomString(uint16_t bitCount, char* stringRandom)
 		// Convert from array of numbers into the string
 		for(uint16_t i = 0; i < (bitCount/GENERAL_NIST_OUTPUT_LEN); i++)
 		{
+			// STR30-C. Do not attempt to modify string literals
+			// STR31-C. Guarantee that storage for strings has sufficient space for character data and the null terminator
 			char byteInString[30]={0};
 #if DEBUG
 			printf("%d",domainParameterSeed[i]);
 #endif
+			// STR30-C. Do not attempt to modify string literals
+			//STR31-C. Guarantee that storage for strings has sufficient space for character data and the null terminator
 			unsigned char n = domainParameterSeed[i];
 			// get each byte as a binary number/string
 			for(int i = 7; i >= 0; i--)

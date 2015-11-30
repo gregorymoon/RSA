@@ -1,3 +1,4 @@
+#!/bin/bash
 ##############################################################
 ############## M A I N ########################################
 ##############################################################
@@ -11,8 +12,19 @@ rm output
 echo "Compiling "
 gcc -o output primality_nist.c millerRabinNist.c generalNist.c -std=gnu99 -D DEBUG=0 -D DIGITAL_SIGNATURE=0 -D FEATURE_SEED=0 -lcrypto -lm -lgmp -lc
 
-echo "Running ouput"
+if [ "$1" != "" ]; then
+# If something is sent as an argument, copy the output and run the main php program
+	cp output ../
+	php ../rsa.php
+else
+	echo "Running ouput"
 #./output <Length of P prime> <Length of Q prime> <Length of the seed for PRG> <Number of Iterations for Rabin-Miller>
+	./output 2048 1024 1024 100
+# also copy the output to the php folder
+	cp output ../
+fi
+
+# Below is the scipt to test the primes number generation execution time
 : '
 echo "###############################################################################"
 echo "L=1024bits, N=160bits, SeedLen=1024, Iterations= 500"
@@ -73,4 +85,4 @@ echo "##########################################################################
 echo "L=3072bits, N=256bits, SeedLen=2048, Iterations= 100"
 echo "##################################################################################"
 '
-./output 2048 1024 1024 100
+
