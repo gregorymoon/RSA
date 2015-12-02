@@ -81,7 +81,7 @@ void generalNistGenerateRandomString(uint16_t bitCount, char* stringRandom)
 	}
 	else
 	{
-		printf("Error in acquiring random number\n");
+		printf("Error in acquirung random number\n");
 	}
 
 }
