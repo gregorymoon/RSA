@@ -137,6 +137,9 @@ static void primalityNist_SeedPRG(uint16_t seedLen)
 			if(MousePacket.X_value)
 			{
 				Seed[--seedLen] = MousePacket.X_value;
+				Seed[--seedLen] = MousePacket.X_value;
+				Seed[--seedLen] = MousePacket.X_value;
+				Seed[--seedLen] = MousePacket.X_value;
 #if DEBUG
 				printf("%d", MousePacket.X_value);
 #endif

@@ -10,12 +10,13 @@ echo "cleaning output"
 rm output
 
 echo "Compiling "
-gcc -o output primality_nist.c millerRabinNist.c generalNist.c -std=gnu99 -D DEBUG=0 -D DIGITAL_SIGNATURE=0 -D FEATURE_SEED=0 -lcrypto -lm -lgmp -lc
+gcc -o output primality_nist.c millerRabinNist.c generalNist.c -std=gnu99 -D DEBUG=0 -D DIGITAL_SIGNATURE=0 -D FEATURE_SEED=1 -lcrypto -lm -lgmp -lc
 
 if [ "$1" != "" ]; then
 # If something is sent as an argument, copy the output and run the main php program
 	cp output ../
-	php ../rsa.php
+	cd  ..
+	php rsa.php
 else
 	echo "Running ouput"
 #./output <Length of P prime> <Length of Q prime> <Length of the seed for PRG> <Number of Iterations for Rabin-Miller>
